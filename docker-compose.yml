@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - devops-arena
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DATABASE_URL=sqlite:////data/devops_arena.db
+      - SECRET_KEY=your-secret-key-change-in-production
+    networks:
+      - devops-arena
+    # Mount Docker socket for container management
+    # WARNING: This gives the backend container access to Docker daemon
+    # Only use in trusted development environments
+
+networks:
+  devops-arena:
+    driver: bridge
+
+volumes:
+  data:
