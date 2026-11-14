@@ -1,174 +1,62 @@
-# DevOps Arena
+# 🎯 DevOps Training Platform
 
-A browser-based interactive learning platform for practicing DevOps troubleshooting in isolated sandbox environments.
+Interactive hands-on DevOps training platform with real-world troubleshooting challenges.
 
-## Overview
+## ✨ Features
 
-DevOps Arena provides real-world incident scenarios where users debug broken infrastructure in isolated Docker containers, validate their fixes, and compete on leaderboards—similar to LeetCode but for operational troubleshooting.
+- 🐳 5 Real-World Challenges (Disk Full, Docker Restart Loop, Nginx 502, K8s CrashLoop, GitHub Actions)
+- 💻 Web-Based Terminal with Docker integration
+- ✅ Automated Validation
+- 🏆 Leaderboard System
+- 🔐 JWT Authentication
 
-## Architecture
-
-```mermaid
-graph TB
-    subgraph Browser
-        UI[React Frontend]
-        Terminal[xterm.js Terminal]
-    end
-    
-    subgraph Backend_Server[FastAPI Backend Server]
-        API[REST API Endpoints]
-        WS[WebSocket Handler]
-        SessionMgr[Session Manager]
-        Validator[Validation Service]
-    end
-    
-    subgraph Container_Runtime[Docker Runtime]
-        C1[Challenge Container 1]
-        C2[Challenge Container 2]
-        CN[Challenge Container N]
-    end
-    
-    Database[(SQLite Database)]
-    Challenges[/Challenge Definitions/]
-    
-    UI -->|HTTP| API
-    Terminal -->|WebSocket| WS
-    API --> SessionMgr
-    WS --> SessionMgr
-    SessionMgr -->|Docker SDK| Container_Runtime
-    API --> Database
-    Validator -->|Docker Exec| Container_Runtime
-    SessionMgr --> Challenges
-    Validator --> Database
-```
-
-## Project Structure
-
-```
-devops-arena/
-├── frontend/              # React + Vite frontend
-│   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── context/      # React context (auth, etc.)
-│   │   ├── pages/        # Page components
-│   │   └── hooks/        # Custom hooks
-│   └── package.json
-├── backend/              # FastAPI backend
-│   ├── app/
-│   │   ├── models/      # SQLAlchemy models
-│   │   ├── routers/     # API endpoints
-│   │   ├── schemas/     # Pydantic schemas
-│   │   ├── services/    # Business logic
-│   │   └── main.py      # Application entry point
-│   └── requirements.txt
-├── challenges/           # Challenge definitions
-│   └── [challenge-name]/
-│       ├── Dockerfile
-│       ├── setup.sh
-│       ├── validate.sh
-│       └── metadata.json
-└── docker-compose.yml    # Local development setup
-```
-
-## Local Development Setup
+## 🚀 Quick Start
 
 ### Prerequisites
+- Docker Desktop
+- Node.js 20+
+- Python 3.11+
 
-- Docker and Docker Compose
-- Node.js 20+ (if running frontend locally)
-- Python 3.11+ (if running backend locally)
+### Setup
 
-### Quick Start with Docker Compose
-
-1. Clone the repository:
+1. Clone:
 ```bash
-git clone <repository-url>
-cd devops-arena
+git clone https://github.com/vshetty26/devops-training-platform.git
+cd devops-training-platform
 ```
 
-2. Start all services:
+2. Build Docker images:
 ```bash
-docker-compose up --build
+docker build -t devops-arena-disk-full ./challenges/disk-full
+docker build -t devops-arena-docker-restart-loop ./challenges/docker-restart-loop
+docker build -t devops-arena-nginx-502 ./challenges/nginx-502
+docker build -t devops-arena-k8s-crashloop ./challenges/k8s-crashloop
+docker build -t devops-arena-github-actions-yaml ./challenges/github-actions-yaml
 ```
 
-3. Access the application:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-### Local Development (without Docker Compose)
-
-#### Backend Setup
-
+3. Start backend:
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+source venv/bin/activate
 uvicorn app.main:app --reload
 ```
 
-#### Frontend Setup
-
+4. Start frontend:
 ```bash
 cd frontend
-npm install
-npm run dev
+npm install && npm run dev
 ```
 
-## Technology Stack
+5. Open http://localhost:5173 and login with demo/demo123
 
-### Frontend
-- **React 18**: UI framework
-- **Vite**: Build tool and dev server
-- **Tailwind CSS**: Styling
-- **xterm.js**: Terminal emulation
-- **React Router**: Navigation
+## 🛠️ Tech Stack
 
-### Backend
-- **FastAPI**: Web framework
-- **SQLAlchemy**: ORM
-- **SQLite**: Database
-- **Docker SDK for Python**: Container management
-- **python-jose**: JWT authentication
-- **passlib**: Password hashing
+**Frontend:** React 18, Vite, Tailwind CSS, xterm.js
+**Backend:** FastAPI, SQLAlchemy, SQLite, Docker SDK, JWT
 
-## Features
+## 📧 Contact
 
-- 🔐 User authentication with JWT
-- 📋 Browse challenges with difficulty levels
-- 🐳 Isolated Docker sandbox environments
-- 💻 Browser-based terminal interface
-- ✅ Automated solution validation
-- 🏆 Leaderboard rankings
-- ⏱️ Session timeout enforcement
-- 🔒 Security-hardened containers
+**Author:** Vamshi Shetty
+**GitHub:** [@vshetty26](https://github.com/vshetty26)
 
-## Demo
-
-<!-- TODO: Add demo GIF here -->
-
-## Deployment
-
-### AWS EC2 Free-Tier Deployment
-
-1. Launch an EC2 instance (t2.micro)
-2. Install Docker and Docker Compose
-3. Clone the repository
-4. Update environment variables in `docker-compose.yml`
-5. Run `docker-compose up -d`
-
-Detailed deployment instructions coming soon.
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Contact
-
-For questions or issues, please open a GitHub issue.
+⭐ Star this repo if you find it helpful!
