@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: devops-training-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: /app/data/devops_arena.db
+      - key: PORT
+        value: 8000
