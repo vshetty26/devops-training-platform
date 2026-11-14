@@ -8,6 +8,7 @@ class ChallengeResponse(BaseModel):
     difficulty: str
     brief: str
     completed: Optional[bool] = False
+    completion_time_seconds: Optional[int] = None
 
     class Config:
         from_attributes = True

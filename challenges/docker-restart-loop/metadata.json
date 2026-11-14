@@ -1,0 +1,13 @@
+{
+  "id": "docker-restart-loop",
+  "title": "Fix Docker Container Restart Loop",
+  "difficulty": "easy",
+  "brief": "A containerized application keeps crashing and restarting immediately after startup. The startup script at /app/start.sh exits with an error, causing a restart loop. Your task is to identify the issue and fix it so the application runs continuously and serves HTTP requests on port 8080.",
+  "hints": [
+    "Check the startup script at /app/start.sh - what does it do before starting the app?",
+    "The script checks for a file at /app/config.json - does it exist?",
+    "You can either create the missing file or modify the script to handle its absence gracefully",
+    "Test your fix by running: /app/start.sh (it should not exit immediately)",
+    "Once fixed, the app should be accessible at: curl http://localhost:8080"
+  ]
+}

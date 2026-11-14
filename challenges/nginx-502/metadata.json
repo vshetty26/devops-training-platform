@@ -1,0 +1,13 @@
+{
+  "id": "nginx-502",
+  "title": "Fix Nginx 502 Bad Gateway",
+  "difficulty": "medium",
+  "brief": "The Nginx web server is returning 502 Bad Gateway errors when trying to handle requests. Your task is to investigate the issue and get Nginx returning successful HTTP 200 responses. The broken configuration is located at /tmp/broken_backend.conf.",
+  "hints": [
+    "Check /tmp/broken_backend.conf for the Nginx configuration",
+    "Look for the upstream backend configuration - is it reachable?",
+    "The upstream is pointing to 127.0.0.1:9999 which doesn't exist",
+    "You can either start a service on port 9999 or reconfigure Nginx to serve content directly",
+    "Test your fix with: curl http://localhost:8080"
+  ]
+}

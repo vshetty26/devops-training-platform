@@ -1,41 +1,70 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from datetime import timedelta, datetime
 from app.database import get_db
-from app.schemas import LoginRequest, LoginResponse, UserResponse
-from app.models import User
-from passlib.context import CryptContext
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from typing import Optional
+from app.schemas.user import LoginRequest, LoginResponse, UserResponse, UserCreate
+from app.models.user import User
+from app.services.auth_service import (
+    authenticate_user,
+    create_access_token,
+    create_user,
+    ACCESS_TOKEN_EXPIRE_MINUTES
+)
+from app.dependencies import get_current_user
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# JWT settings
-SECRET_KEY = "your-secret-key-change-in-production"  # TODO: Move to environment variable
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(
+    user_data: UserCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Register a new user account.
+    
+    Creates a new user with hashed password storage.
+    
+    Args:
+        user_data: Username and password for new account
+        db: Database session
+        
+    Returns:
+        Created user information (without password)
+        
+    Raises:
+        HTTPException: 400 if username already exists
+        
+    Requirements: 1.5 (secure password storage)
+    """
+    logger.info(f"Registration attempt for username: {user_data.username}")
+    
+    try:
+        new_user = create_user(db, user_data.username, user_data.password)
+        logger.info(
+            f"User registered successfully - username: {new_user.username}, "
+            f"user_id: {new_user.id}, timestamp: {datetime.utcnow().isoformat()}"
+        )
+        return UserResponse.model_validate(new_user)
+    except ValueError as e:
+        logger.warning(f"Registration failed for username {user_data.username}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except IntegrityError:
+        db.rollback()
+        logger.warning(
+            f"Registration failed - username already exists: {user_data.username}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists"
+        )
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash"""
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    """Hash a password"""
-    return pwd_context.hash(password)
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT access token"""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
 
 @router.post("/login", response_model=LoginResponse)
 async def login(
@@ -45,11 +74,30 @@ async def login(
     """
     Authenticate user and return JWT token.
     
-    Requirements: 1.1, 1.2
-    """
-    user = db.query(User).filter(User.username == login_data.username).first()
+    Validates credentials and creates an authenticated session via JWT.
     
-    if not user or not verify_password(login_data.password, user.password_hash):
+    Args:
+        login_data: Username and password credentials
+        db: Database session
+        
+    Returns:
+        JWT access token and user information
+        
+    Raises:
+        HTTPException: 401 if credentials are invalid
+        
+    Requirements: 1.1 (authenticated session creation), 1.2 (invalid credentials error), 11.5 (logging)
+    """
+    logger.info(f"Login attempt for username: {login_data.username}")
+    
+    user = authenticate_user(db, login_data.username, login_data.password)
+    
+    if not user:
+        # Log failed login attempt (WARNING level - security event)
+        logger.warning(
+            f"Failed login attempt - username: {login_data.username}, "
+            f"reason: Invalid credentials, timestamp: {datetime.utcnow().isoformat()}"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
@@ -61,20 +109,34 @@ async def login(
         expires_delta=access_token_expires
     )
     
+    # Log successful login (INFO level - normal operation)
+    # Note: Do NOT log tokens or passwords
+    logger.info(
+        f"Successful login - username: {user.username}, user_id: {user.id}, "
+        f"timestamp: {datetime.utcnow().isoformat()}"
+    )
+    
     return LoginResponse(
         token=access_token,
         user=UserResponse.model_validate(user)
     )
 
+
 @router.get("/me", response_model=UserResponse)
-async def get_current_user(
-    db: Session = Depends(get_db),
-    # TODO: Add authentication dependency
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get current authenticated user information.
     
-    Requirements: 1.1
+    Validates JWT token and returns user profile.
+    
+    Args:
+        current_user: Authenticated user from JWT token
+        
+    Returns:
+        User profile information
+        
+    Requirements: 1.1 (authenticated session), 1.3 (user association)
     """
-    # Placeholder: will implement JWT validation in authentication task
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    return UserResponse.model_validate(current_user)

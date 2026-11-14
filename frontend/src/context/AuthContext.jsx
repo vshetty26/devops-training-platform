@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 
 const AuthContext = createContext(null)
 
@@ -35,37 +36,56 @@ export const AuthProvider = ({ children }) => {
           setToken(storedToken)
           setIsAuthenticated(true)
         } else {
+          // Token is invalid or expired
           localStorage.removeItem('token')
           setToken(null)
+          setUser(null)
+          setIsAuthenticated(false)
         }
       } catch (error) {
         console.error('Auth check failed:', error)
         localStorage.removeItem('token')
         setToken(null)
+        setUser(null)
+        setIsAuthenticated(false)
       }
     }
     setLoading(false)
   }
 
   const login = async (username, password) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username, password })
-    })
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      })
 
-    if (!response.ok) {
-      throw new Error('Login failed')
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.detail || 'Login failed. Please check your credentials.'
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+      
+      // Store token and user data
+      setToken(data.token)
+      setUser(data.user)
+      setIsAuthenticated(true)
+      localStorage.setItem('token', data.token)
+      
+      return data
+    } catch (error) {
+      // Clear any stale data on login failure
+      setUser(null)
+      setToken(null)
+      setIsAuthenticated(false)
+      localStorage.removeItem('token')
+      throw error
     }
-
-    const data = await response.json()
-    setToken(data.token)
-    setUser(data.user)
-    setIsAuthenticated(true)
-    localStorage.setItem('token', data.token)
-    return data
   }
 
   const logout = () => {
@@ -86,4 +106,8 @@ export const AuthProvider = ({ children }) => {
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired
 }

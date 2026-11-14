@@ -1,0 +1,14 @@
+{
+  "id": "k8s-crashloop",
+  "title": "Fix Kubernetes CrashLoopBackOff",
+  "difficulty": "medium",
+  "brief": "A Kubernetes pod is stuck in CrashLoopBackOff state and won't start. The broken pod manifest is at /tmp/broken-pod.yaml. Your task is to identify and fix the issues preventing the pod from running successfully.",
+  "hints": [
+    "Check /tmp/broken-pod.yaml for the pod configuration",
+    "Look at the 'command' field - does that binary exist in the nginx container?",
+    "Check the environment variables - is there a reference to a non-existent secret?",
+    "Examine the livenessProbe - does the port match where nginx is actually listening?",
+    "Common fixes: remove invalid command, use 'value' instead of 'valueFrom' for env vars, match probe port to container port (80 for nginx)",
+    "Test your manifest with: kubectl apply --dry-run=client -f /tmp/broken-pod.yaml"
+  ]
+}

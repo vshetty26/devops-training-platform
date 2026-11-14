@@ -1,0 +1,15 @@
+{
+  "id": "disk-full",
+  "title": "Server Disk Full - Free Up Space",
+  "difficulty": "easy",
+  "brief": "The server's disk is nearly full due to accumulated log files, cache files, and old backups. Services are failing because there isn't enough disk space. Your task is to identify and remove unnecessary large files to free up at least 200MB of disk space.",
+  "hints": [
+    "Use 'df -h' to check overall disk usage and available space",
+    "Use 'du -sh /*' to identify which top-level directories are using the most space",
+    "Use 'du -ah /var/log /tmp ~ | sort -rh | head -20' to find the largest files in common locations",
+    "Look for old log files (*.log.old, *.log.1), cache files (*.tmp, *cache*), and backup files (*backup*, *.tar.gz)",
+    "The 'find' command can help: 'find / -type f -size +10M 2>/dev/null' finds files larger than 10MB",
+    "After identifying large unnecessary files, use 'rm' to delete them",
+    "Check these specific directories: /var/log/oldlogs/, /tmp/cache/, and ~/.backup/"
+  ]
+}

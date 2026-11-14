@@ -1,0 +1,14 @@
+{
+  "id": "github-actions-yaml",
+  "title": "Fix Broken GitHub Actions Workflow",
+  "difficulty": "easy",
+  "brief": "A GitHub Actions CI/CD workflow has been created but contains multiple YAML syntax errors and configuration issues that prevent it from running. Your task is to identify and fix all the errors in the workflow file located at ~/.github/workflows/ci.yml so that it passes validation.",
+  "hints": [
+    "Check the workflow file at ~/.github/workflows/ci.yml",
+    "Use 'yamllint ~/.github/workflows/ci.yml' to identify YAML syntax errors",
+    "GitHub Actions uses 2-space indentation consistently - check for lines with incorrect spacing",
+    "Look for the 'runs:' key - this is not valid in GitHub Actions, it should be 'run:'",
+    "Some steps are missing their action keys entirely - each step needs either 'run:' or 'uses:'",
+    "Pay attention to indentation at the job and step level - steps should be indented under their job"
+  ]
+}
